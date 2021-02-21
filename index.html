@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sócobris</title>
+    <link rel="icon" type="imagem/png" href="Logotipo.png" />
+    <style>
+        
+        body{
+            display:inline-flex;
+            margin: auto;
+            align-items:center;
+            justify-content:flex;
+            
+        }
+        canvas{
+            
+            box-shadow: rgb(0, 0, 0) 20px 10px 50px;
+            border-radius: 20px;
+        }
+
+        #start, #game-over{
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #ffffff;
+            padding: 20px;
+            top: 50%;
+            left: 50%;
+            height: 200px;
+            width: 300px;
+            text-align: center;
+        }
+
+        #start a, #game-over a{
+            border: 3px solid #ffffff;
+            background-color:rgba(9, 255, 17, 0.542);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px;
+            border-radius:15px;
+            cursor: pointer;
+            display: inline-block;
+            width: 300px;
+            text-align: center;
+            font-size: 2em;
+            display: inline-block;
+        }
+        
+        #game-over h1{
+            font-family:fantasy;
+            font-size: 50px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: red;
+        }
+
+        #start a:hover, #game-over a:hover { background-color: rgba(9, 255, 18, 0.35); color: #9e9e9e;}
+
+        #perguntas{
+            position: fixed;
+            width: 50%;
+            height: 50%;
+            background-color: white;
+            display: none;
+        }
+    </style>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    
+    <img src="Logotipo-grande.png" alt="Logotipo do Sócobris">
+    
+    <canvas id="stage" width="400px" height="400px" style="display:none"></canvas>
+    
+    <div id="start" style="display:block">
+        <a href="#" onclick="startGame() ">Iniciar Jogo</a>
+    </div>
+
+    <div id="game-over" style="display:none">
+        <h1>GAME OVER</h1>
+        <a href="#" onclick="document.location.reload(true)">Jogar novamente</a>
+    </div>
+
+    <div id="perguntas"></div>
+
+    <script type="text/javascript">
+      
+           
+            function jogo(){
+            var verify = 0;
+            //Efeitos sonoros
+            const gulpSound = new Audio("eating-apple.mp3"); 
+            const temaSound = new Audio("Instrumental.mp3");
+
+            var stage = document.getElementById('stage');
+            var ctx = stage.getContext("2d");
+            document.addEventListener("keydown", keyPush);
+            
+            var t = 60;
+            time();
+            
+            var vezes = Math.floor(((Math.random() * 10000) + 3000)/t);
+            console.log(vezes);
+            var t1 = 0;
+
+            setInterval(game, t); 
+            
+
+            //Perguntas
+            const perguntasFacil = [0, 1, 2, 3, 4];
+
+            const perguntasDificil = [5, 6, 7, 8, 9];
+            
+            //Pontos por quadro
+            var vel = 1; 
+
+            //Score
+            var score = 0; 
+
+            //Efeitos sonoros
+            gulpSound.play();
+            temaSound.play();
+
+            //Variáveis globais do jogo
+            var vx = vy = 0;
+            var px = 10;
+            var py = 15;
+            var tp = 20;
+            var qp = 20;
+            var ax = ay = 15;
+
+            var trail = [];
+            tail = 5;
+
+            function game(){
+                
+                px += vx;
+                py += vy;
+                
+                //Game over 
+                if(px < 0 || px > qp-1 || py < 0 || py > qp-1){
+                    vx = vy = 0;
+                    tail = 5;
+                    px = Math.floor(Math.random()*qp);
+                    py = Math.floor(Math.random()*qp);     
+                    score = 0; 
+                    
+                    
+                
+                    gameOver();
+                    return;
+                    
+                }
+
+                ctx.fillStyle = "black";
+                ctx.fillRect(0,0, stage.width, stage.height);
+
+                
+                ctx.fillStyle = "red";
+                ctx.fillRect(ax*tp, ay*tp, tp, tp);
+
+                ctx.fillStyle = "green"; 
+                for (let i = 0; i < trail.length; i++) {
+                    ctx.fillRect(trail[i].x*tp, trail[i].y*tp, tp-1, tp-1);
+                    
+                    //Game over 
+                    if(trail[i].x == px && trail[i].y == py && (vx != 0 || vy != 0)){                                              
+                        vx = vy = 0;
+                        tail = 5;
+
+                        score = 0;  
+                        gameOver();
+                    return;
+                    }
+                }
+
+                trail.push({x:px, y:py}) //coloca elemento no último lugar do array
+                while (trail.length > tail){
+                    trail.shift(); //tira primeiro elemento
+                }
+                
+                //Apple colision
+                if(ax==px && ay==py){
+                    tail++;
+                    ax = Math.floor(Math.random()*qp);
+                    ay = Math.floor(Math.random()*qp);
+                    score++;
+                    gulpSound.play();
+                    temaSound.play();
+                }
+                
+                drawScore();
+                verifyForAsk();
+            }
+            
+
+            function keyPush(event){
+                switch (event.keyCode) {
+                    case 37: //left
+                        if(vx==vel){break}
+                        vx = -vel;
+                        vy = 0;
+                        break;
+                
+                    case 65: //left
+                    if(vx==vel){break}
+                    vx = -vel;
+                    vy = 0;
+                    break;
+  
+                    case 38: //up
+                        if(vy==vel){break}
+                        vx = 0;
+                        vy = -vel;
+                        break;
+                    
+                    case 87: //up
+                    if(vy==vel){break}
+                    vx = 0;
+                    vy = -vel;
+                    break;
+
+                    case 39: //right
+                        if(vx==-vel){break}
+                        vx = vel;
+                        vy = 0;
+                        break;
+                        
+                    case 68: //right
+                        if(vx==-vel){break}
+                        vx = vel;
+                        vy = 0;
+                        break;
+
+                    case 40: //down
+                        if(vy==-vel){break}
+                        vx = 0;
+                        vy = vel;  
+                        break;
+
+                    case 83: //down
+                    if(vy==-vel){break}
+                    vx = 0;
+                    vy = vel;  
+                    break;
+
+                    default:
+                    break;
+                }
+                
+            }
+        
+            
+
+            function drawScore(){
+            ctx.fillStyle = "green";
+            ctx.font = "15px Verdana ";
+            ctx.fillText("Score: " + score, stage.width-80, 20);
+        }
+
+            function time(){
+        
+        var allTime = Math.floor((Math.random() * 4500) + 1500);
+        var times = Math.floor(allTime/t);
+        }
+
+            function embaralhar(array) {
+            for (var i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+            }   
+        }
+
+        function verifyForAsk(){
+                t1++;
+                console.log(t1);
+                if(t1 == vezes){
+                   var y = 0;
+                    while(y == 0){
+                    pergunta();
+                    break;
+                   }
+                }
+            }
+    }
+  
+
+
+
+
+
+   function startGame(){
+       var startDiv = document.getElementById("start");
+       var gameCanvas = document.getElementById("stage");
+       var gameOver = document.getElementById("game-over");
+       
+       startDiv.style.display = "none";
+       gameCanvas.style.display = "block";
+       gameOver.style.display = "none";
+
+       jogo();
+   }
+
+   function gameOver(){
+        var startDiv = document.getElementById("start");
+       var gameCanvas = document.getElementById("stage");
+       var gameOver = document.getElementById("game-over");
+       
+       gameCanvas.style.display = "none";
+       gameOver.style.display = "block";
+ 
+   }
+
+   function pergunta(){
+    var quadro = document.getElementById("perguntas");
+    quadro.style.display = "none";
+   }
+    
+    </script>
+</body>
+</html>
